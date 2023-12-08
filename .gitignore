@@ -1,0 +1,17 @@
+.ipynb_checkpoints
+# Ignore node_modules directory
+node_modules/
+
+# Ignore log files
+*.log
+
+# Ignore compiled output
+dist/
+build/
+
+# Ignore swap files (commonly created by Vim)
+*.swp
+
+signal_parser/
+__pycache__/
+*.pyc
