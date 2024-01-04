@@ -17,12 +17,12 @@ class DataOrganize:
         self.data = data
 
     def filter_by_date(self, start_date, end_date):
-        self.data = self.data [(self.data ['date'] >= start_date) & (self.data ['date'] <= end_date)]
+        self.data = self.data [(self.data ['created_at'] >= start_date) & (self.data ['created_at'] <= end_date)]
 
 
     def filter_by_coin(self, coin_names, coin_symbols):
-        name_condition = self.data['text'].str.contains('|'.join(coin_names), case=False)
-        symbol_condition = self.data['text'].str.contains('|'.join(coin_symbols), case=False)
+        name_condition = self.data['body'].str.contains('|'.join(coin_names), case=False)
+        symbol_condition = self.data['body'].str.contains('|'.join(coin_symbols), case=False)
 
         self.data = self.data[name_condition | symbol_condition]
         def find_related_coins(text):
@@ -34,7 +34,7 @@ class DataOrganize:
                 if symbol.lower() in text.lower():
                     related_coins_for_row.append(symbol)
             return related_coins_for_row
-        self.data['related_coins'] = self.data['text'].apply(find_related_coins)
+        self.data['related_coins'] = self.data['body'].apply(find_related_coins)
 
 
     def clean_data(self):
@@ -56,14 +56,15 @@ class DataOrganize:
             entities = [ent.text for ent in doc.ents]
             return language, entities
 
-        raw_data['language'], raw_data['entities'] = zip(*[extract_features(str(x)) for x in tqdm(raw_data['text'])])
+        raw_data['language'], raw_data['entities'] = zip(*[extract_features(str(x)) for x in tqdm(raw_data['body'])])
         df_eng = raw_data[raw_data.language.values == 'en']
-        df_new = df_eng.filter(items = ['id','text','date'])
+        df_new = df_eng.filter(items = ['id','body','created_at','user.followers','entities.sentiment.basic'])
 
         def parse_date(x):
-            date_time_obj = datetime.datetime.strptime(x, '%Y-%m-%dT%H:%M:%S')
-            return date_time_obj.date()
-        df_new['Day'] = [parse_date(x) for x in tqdm(df_new['date'])]
+            date_time_obj = datetime.datetime.strptime(x, '%Y-%m-%dT%H:%M:%SZ')
+            return date_time_obj.date().strftime('%Y-%m-%d')
+        print(type(df_new["created_at"][0]))
+        df_new['Day'] = [parse_date(x) for x in tqdm(df_new['created_at'])]
         self.data = df_new
 
     def analyze_sentiment(self):
@@ -76,5 +77,5 @@ class DataOrganize:
             """
             scores = sid_obj.polarity_scores(x)
             return scores['neg'],scores['neu'],scores['pos'],scores['compound']
-        self.data [['vader_neg','vader_neu','vader_pos','vader_compound']] = [Vader_senti(x) for x in tqdm(self.data ['text'])]
+        self.data [['vader_neg','vader_neu','vader_pos','vader_compound']] = [Vader_senti(x) for x in tqdm(self.data ['body'])]
 
