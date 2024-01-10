@@ -8,7 +8,7 @@ from spacy.language import Language
 from spacy_langdetect import LanguageDetector
 from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 import plotly.express as px
-
+from utilities import Vader_senti
 
 
 
@@ -68,14 +68,5 @@ class DataOrganize:
         self.data = df_new
 
     def analyze_sentiment(self):
-        sid_obj = SentimentIntensityAnalyzer()
-        def Vader_senti(x):
-            """
-            Function to calculate the sentiment of the message x.
-            Returns the probability of a given input sentence to be Negative, Neutral, Positive and Compound score.
-            
-            """
-            scores = sid_obj.polarity_scores(x)
-            return scores['neg'],scores['neu'],scores['pos'],scores['compound']
         self.data [['vader_neg','vader_neu','vader_pos','vader_compound']] = [Vader_senti(x) for x in tqdm(self.data ['body'])]
 
