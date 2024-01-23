@@ -12,21 +12,38 @@ class Evaluator:
         self.data = data
         self.predicted_labels = []
         self.actual_labels = []
-    
+        self.prediction_outputs = []
     def evaluate_model_crypto_bert(self):
         self.actual_labels = self.data['entities.sentiment.basic']
 
-        for idx, row in tqdm(self.data.iterrows(), total=len(self.data), desc="FinBERT Sentiment Analysis"):
+        for idx, row in tqdm(self.data.iterrows(), total=len(self.data), desc="CryptoBERT Sentiment Analysis"):
             text = row['body']
             # Tokenize and get predictions
             inputs = self.tokenizer(text, return_tensors='pt')
             outputs = self.model(**inputs)
-            prediction = torch.nn.functional.softmax(outputs.logits, dim=-1)
-            if(prediction[0][2] > prediction[0][0]):
+            prediction_output = torch.nn.functional.softmax(outputs.logits, dim=-1)
+            if(prediction_output[0][2] > prediction_output[0][0]):
                 self.predicted_labels.append("Bullish")
             else:
                 self.predicted_labels.append("Bearish")
+            self.prediction_outputs.append(prediction_output)
+        accuracy = accuracy_score(self.actual_labels, self.predicted_labels)
+        return accuracy
+    
+    def evaluate_model_crypto_bert2(self):
+        self.actual_labels = self.data['entities.sentiment.basic']
 
+        for idx, row in tqdm(self.data.iterrows(), total=len(self.data), desc="CryptoBERT 2 Sentiment Analysis"):
+            text = row['body']
+            # Tokenize and get predictions
+            inputs = self.tokenizer(text, return_tensors='pt')
+            outputs = self.model(**inputs)
+            prediction_output = torch.nn.functional.softmax(outputs.logits, dim=-1)
+            if(prediction_output[0][1] > prediction_output[0][0]):
+                self.predicted_labels.append("Bullish")
+            else:
+                self.predicted_labels.append("Bearish")
+            self.prediction_outputs.append(prediction_output)
         accuracy = accuracy_score(self.actual_labels, self.predicted_labels)
         return accuracy
     
@@ -39,12 +56,12 @@ class Evaluator:
             # Tokenize and get predictions
             inputs = self.tokenizer(text, return_tensors='pt')
             outputs = self.model(**inputs)
-            prediction = torch.nn.functional.softmax(outputs.logits, dim=-1)
-            if(prediction[0][0] > prediction[0][1]):
+            prediction_output = torch.nn.functional.softmax(outputs.logits, dim=-1)
+            if(prediction_output[0][0] > prediction_output[0][1]):
                 self.predicted_labels.append("Bullish")
             else:
                 self.predicted_labels.append("Bearish")
-
+            self.prediction_outputs.append(prediction_output)
         accuracy = accuracy_score(self.actual_labels, self.predicted_labels)
         return accuracy
     
@@ -84,8 +101,9 @@ class Evaluator:
             print(f"Actual Label: {actual}")
             print(f"Predicted Label: {predicted}")
             print(f"Text: {text}")
+            print("Prediction Confidency \n" + str(self.prediction_outputs[idx]))
             print("\n---------------------\n")
-
+            
     def show_confusion_matrix(self):
         
 

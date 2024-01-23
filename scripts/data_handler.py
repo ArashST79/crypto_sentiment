@@ -1,3 +1,4 @@
+
 import numpy as np
 import pandas as pd
 import json
@@ -9,12 +10,50 @@ from spacy_langdetect import LanguageDetector
 from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 import plotly.express as px
 from utilities import Vader_senti
+import glob
+import pandas as pd
+from enum import Enum
 
-
+class DataModes(Enum):
+    FULL_DATA = "full_data"
+    FIRST_1000 = "first_1000"
+    RANDOM_1000 = "random_1000"
+    RANDOM_10000 = "random_10000"
 
 class DataOrganize:
-    def __init__(self, data):
+
+    def create_clean_data(self, mode=DataModes.FULL_DATA):
+        self.mode = mode
+        files = glob.glob('../data/StockTwits.*_messages.csv')
+
+        dfs = []
+        columns_to_read = ['user.username', 'body', 'created_at', 'user.followers', 'entities.sentiment.basic']
+        for file in files:
+            df = pd.read_csv(file, nrows=10000, usecols=columns_to_read)
+            dfs.append(df)
+
+        data = pd.concat(dfs, ignore_index=True)
+        data.drop_duplicates(subset=['user.username', 'body'], inplace=True)
+        data.reset_index(drop=True, inplace=True)
+
+        max_text_length = 300
+        data = data[data['body'].str.len() <= max_text_length]
+        data.reset_index(drop=True, inplace=True)
+
+        if mode == DataModes.FIRST_1000:
+            data = data.head(1000)
+        elif mode == DataModes.RANDOM_1000:
+            data = data.sample(n=1000, random_state=42) 
+        elif mode == DataModes.RANDOM_10000:
+            data = data.sample(n=10000, random_state=42) 
+            
+        data.reset_index(drop=True, inplace=True)
         self.data = data
+        self.clean_data()
+        return self.data
+
+    def __init__(self):
+        self.data = None
 
     def filter_by_date(self, start_date, end_date):
         self.data = self.data [(self.data ['created_at'] >= start_date) & (self.data ['created_at'] <= end_date)]
