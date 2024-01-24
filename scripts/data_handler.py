@@ -19,6 +19,7 @@ class DataModes(Enum):
     FIRST_1000 = "first_1000"
     RANDOM_1000 = "random_1000"
     RANDOM_10000 = "random_10000"
+    RANDOM_100000 = "random_100000"
     HALF_DATA = "half_data"
 
 class DataOrganize:
@@ -47,6 +48,8 @@ class DataOrganize:
             data = data.sample(n=1000, random_state=42) 
         elif mode == DataModes.RANDOM_10000:
             data = data.sample(n=10000, random_state=42) 
+        elif mode == DataModes.RANDOM_100000:
+            data = data.sample(n=100000, random_state=42) 
         elif mode == DataModes.HALF_DATA:
             data = data.sample(n=int(len(data)/2), random_state=42) 
 
