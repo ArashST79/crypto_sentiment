@@ -19,6 +19,7 @@ class DataModes(Enum):
     FIRST_1000 = "first_1000"
     RANDOM_1000 = "random_1000"
     RANDOM_10000 = "random_10000"
+    HALF_DATA = "half_data"
 
 class DataOrganize:
 
@@ -29,7 +30,7 @@ class DataOrganize:
         dfs = []
         columns_to_read = ['user.username', 'body', 'created_at', 'user.followers', 'entities.sentiment.basic']
         for file in files:
-            df = pd.read_csv(file, nrows=10000, usecols=columns_to_read)
+            df = pd.read_csv(file, nrows=50000, usecols=columns_to_read)
             dfs.append(df)
 
         data = pd.concat(dfs, ignore_index=True)
@@ -46,7 +47,9 @@ class DataOrganize:
             data = data.sample(n=1000, random_state=42) 
         elif mode == DataModes.RANDOM_10000:
             data = data.sample(n=10000, random_state=42) 
-            
+        elif mode == DataModes.HALF_DATA:
+            data = data.sample(n=int(len(data)/2), random_state=42) 
+
         data.reset_index(drop=True, inplace=True)
         self.data = data
         self.clean_data()
@@ -102,7 +105,6 @@ class DataOrganize:
         def parse_date(x):
             date_time_obj = datetime.datetime.strptime(x, '%Y-%m-%dT%H:%M:%SZ')
             return date_time_obj.date().strftime('%Y-%m-%d')
-        print(type(df_new["created_at"][0]))
         df_new['Day'] = [parse_date(x) for x in tqdm(df_new['created_at'])]
         self.data = df_new
 

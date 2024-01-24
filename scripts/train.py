@@ -7,7 +7,7 @@ from tqdm import tqdm
 from sklearn.metrics import accuracy_score
 import numpy as np
 
-def train_and_evaluate_model(train_loader,val_loader, model):
+def train_and_evaluate_model(train_loader,val_loader, model, device):
 
     all_actual_labels = []
     all_predicted_labels = []
@@ -19,6 +19,7 @@ def train_and_evaluate_model(train_loader,val_loader, model):
         model.train()
         for batch in tqdm(train_loader):
             optimizer.zero_grad()
+            batch = {key: value.to(device) for key, value in batch.items()}
             outputs = model(**batch)
             loss = outputs.loss
             loss.backward()
@@ -31,6 +32,7 @@ def train_and_evaluate_model(train_loader,val_loader, model):
 
         with torch.no_grad():
             for val_batch in val_loader:
+                val_batch = {key: value.to(device) for key, value in batch.items()}
                 val_outputs = model(**val_batch)
                 val_loss = val_outputs.loss
                 val_losses.append(val_loss.item())
