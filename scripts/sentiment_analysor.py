@@ -5,6 +5,26 @@ from sklearn.metrics import accuracy_score
 from utilities import Vader_senti
 import seaborn as sns
 from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
+
+class Predictor:
+    def __init__(self, model, tokenizer, data):
+        self.model = model
+        self.tokenizer = tokenizer
+        self.data = data
+        self.predicted_labels = []
+    def predict(self):
+        for idx, row in tqdm(self.data.iterrows(), total=len(self.data), desc="CryptoBERT Sentiment Analysis"):
+            text = row['body']
+            # Tokenize and get predictions
+            inputs = self.tokenizer(text, return_tensors='pt')
+            outputs = self.model(**inputs)
+            prediction_output = torch.nn.functional.softmax(outputs.logits, dim=-1)
+            if(prediction_output[0][2] > prediction_output[0][0]):
+                self.predicted_labels.append("Bullish")
+            else:
+                self.predicted_labels.append("Bearish")
+
+    
 class Evaluator:
     def __init__(self, model, tokenizer, data):
         self.model = model
@@ -101,8 +121,6 @@ class Evaluator:
             print(f"Actual Label: {actual}")
             print(f"Predicted Label: {predicted}")
             print(f"Text: {text}")
-            print("Prediction Confidency \n" + str(self.prediction_outputs[idx]))
-            print("\n---------------------\n")
             
     def show_confusion_matrix(self):
         
